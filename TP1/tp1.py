@@ -24,8 +24,8 @@ import sys, os
 import matplotlib.pyplot as plt
 import numpy as np
 
-TP = os.path.dirname(os.path.realpath(__file__)) + "/"
-DATADIR = filename = TP+"data/"
+TP = os.path.dirname(os.path.realpath(__file__)) + "\\"
+DATADIR = filename = TP+"data\\"
 
 
 #-------------------------------------------------
@@ -55,11 +55,15 @@ def ReadPolygon( filename ) :
 #    point b_i^k from the De Casteljau algorithm.
 #
 def DeCasteljau( BezierPts, k, i, t ) :
-    pass
     #########
     ## TODO : Implement the De Casteljau algorithm.
+    points = np.copy(BezierPts)
+    for depth in range(0,k):
+        for column in range(i,k-depth):
+            points[column] = (1-t)*points[column] + t*points[column+1]
+        # plt.plot( points[:,0], points[:,1], 'bo-' )
+    return points[i]
     #########
-
 
 #-------------------------------------------------
 # BEZIERCURVE( ... )
@@ -88,13 +92,15 @@ def BezierCurve( BezierPts, N ) :
     # to generate the uniform sampling of the interval [0.0,1.0] with N elements, use:
     # >> samples = np.linspace(0.0,1.0,num=N)
     #
-    
+    samples = np.linspace(0.0,1.0,num=N)
     #
     # hint2:
     # to access and change i-th row of the matrix CurvePts, use:
     # >> CurvePts[i,:]
     #
-    
+    for i in range(0,N):
+    	CurvePts[i,:] = DeCasteljau(BezierPts,degree,0,samples[i])
+    # plt.plot( BezierPts[:,0], BezierPts[:,1], 'bo-' )
     #
     # hint3:
     # the actual point b_0^degree on the curve is computed by calling DeCasteljau
@@ -103,7 +109,20 @@ def BezierCurve( BezierPts, N ) :
     
     return CurvePts
 
+def Polygons(BezierPts) :
+    N = BezierPts.shape[0]-1
+    # samples = np.linspace(0.0,1.0,num=N)
+    t = 0.5
+    points = np.copy(BezierPts)
 
+    for depth in range(0,N):
+        plt.plot(points[:,0], points[:,1], 'bo-', linewidth=(depth % 2.0)+0.1)
+
+        for column in range(0,N-depth):
+            points[column] = (1-t)*points[column] + t*points[column+1]
+        points = points[:-1]
+        # plt.plot( points[:,0], points[:,1], 'bo-' )
+    plt.plot(points[:,0], points[:,1], 'bo-', linewidth=(depth % 2.0)+0.2)
 #-------------------------------------------------
 if __name__ == "__main__":
     
@@ -111,28 +130,24 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 :
         dataname = sys.argv[1]
     else :
-        dataname = "simple" # simple, infinity, spiral
+        dataname = "spiral" # simple, infinity, spiral, tuple
 
     # arg 2 : sampling density
     if len(sys.argv) > 2 :
         density = int(sys.argv[2])
     else :
-        density = 10
+        density = 50
 
     # filename
     filename = DATADIR + dataname + ".bcv"
     
     # check if valid datafile
     if not os.path.isfile(filename) :
-        print "error:  invalid dataname '" + dataname + "'"
-        print "usage:  python tp1.py  [simple,infinity,spiral]  [sampling_density]"
+        print ("error:  invalid dataname '" + dataname + "'")
+        print ("usage:  python tp1.py  [simple,infinity,spiral,tuple]  [sampling_density]")
         
     else :    
-        # read control points
-        BezierPts = ReadPolygon(filename)
 
-        # compute curve points
-        CurvePts = BezierCurve(BezierPts,density)
 
         # plot
         fig = plt.gcf()
@@ -142,8 +157,14 @@ if __name__ == "__main__":
         # set axes with equal proportions
         plt.axis('equal')
         
+        # read control points
+        BezierPts = ReadPolygon(filename)
+
+        # compute curve points
+        CurvePts = BezierCurve(BezierPts,density)
+
         # plot the control polygon
-        plt.plot( BezierPts[:,0], BezierPts[:,1], 'bo-' )
+        # plt.plot( BezierPts[:,0], BezierPts[:,1], 'bo-' )
         
         # plot the curve
         plt.plot( CurvePts[:,0], CurvePts[:,1], 'r-' )
@@ -155,6 +176,16 @@ if __name__ == "__main__":
         
         #########
         ## TODO : Compute intermediate polygons b_i^k for k=1,...,degree-1 and i=0,...,degree-k
+        Polygons(BezierPts)
+        # samples = np.linspace(0.0,1.0,num=density)
+        # for i in range(0,density):
+        #     points = np.copy(BezierPts)
+        #     points[i,:] = DeCasteljau(points,points.shape[0]-1,0,samples[i])
+        # plt.plot( BezierPts[:,0], BezierPts[:,1], 'bo-' )
+        # for inter in range(1,density-1):
+        # 	points = np.copy(BezierPts)
+	       # 	DeCasteljau(points)
+	       #  plt.plot( points[:,0], points[:,1], 'bo-' )
         #########
         
         #########
