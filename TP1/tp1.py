@@ -23,11 +23,14 @@
 import sys, os
 import matplotlib.pyplot as plt
 import numpy as np
+import sys
 
-TP = os.path.dirname(os.path.realpath(__file__)) + "\\"
-DATADIR = filename = TP+"data\\"
-
-
+if sys.platform.startswith('win'):
+    TP = os.path.dirname(os.path.realpath(__file__)) + "\\"
+    DATADIR = filename = TP+"data\\"
+else:
+    TP = os.path.dirname(os.path.realpath(__file__)) + "/"
+    DATADIR = filename = TP+"data/"
 #-------------------------------------------------
 # READPOLYGON()
 # Read Bezier control points from a file.
@@ -130,7 +133,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 :
         dataname = sys.argv[1]
     else :
-        dataname = "spiral" # simple, infinity, spiral, tuple
+        dataname = "infinity" # simple, infinity, spiral, tuple
 
     # arg 2 : sampling density
     if len(sys.argv) > 2 :
