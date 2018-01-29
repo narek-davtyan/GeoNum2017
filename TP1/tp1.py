@@ -57,16 +57,25 @@ def ReadPolygon( filename ) :
 # Output
 #    point b_i^k from the De Casteljau algorithm.
 #
-def DeCasteljau( BezierPts, k, i, t ) :
-    #########
-    ## TODO : Implement the De Casteljau algorithm.
-    points = np.copy(BezierPts)
+def DeCasteljauIterative( BezierPts, k, i, t ) :
+
+    # compute deeper level points and write them over the old values
+    # b_column = (1-t)*b_column + t*b_(column-1)
     for depth in range(0,k):
         for column in range(i,k-depth):
-            points[column] = (1-t)*points[column] + t*points[column+1]
-        # plt.plot( points[:,0], points[:,1], 'bo-' )
-    return points[i]
-    #########
+            BezierPts[column] = (1-t)*BezierPts[column] + t*BezierPts[column+1]
+    
+    # return the i-th point
+    return BezierPts[i]
+def DeCasteljauRecursive( BezierPts, k, i, t ) :
+
+    if k!=0 :
+        # return the i-th point of intermediary levels
+        return (1-t)*DeCasteljauRecursive(BezierPts, k-1, i, t) \
+         + t*DeCasteljauRecursive(BezierPts, k-1, i+1, t)
+    else :
+        # return the i-th point of first levels
+        return BezierPts[i]
 
 #-------------------------------------------------
 # BEZIERCURVE( ... )
@@ -86,46 +95,53 @@ def BezierCurve( BezierPts, N ) :
     
     # initialize curvepoints as zeros
     CurvePts = np.zeros([N,2])
-    
-    #########
-    ## TODO : Compute N curve points for t varying uniformly in [0.0,1.0]
-    #########
-    #
-    # hint1:
-    # to generate the uniform sampling of the interval [0.0,1.0] with N elements, use:
-    # >> samples = np.linspace(0.0,1.0,num=N)
-    #
+
+    # generate the uniform sampling of the interval [0.0,1.0] with N elements
     samples = np.linspace(0.0,1.0,num=N)
-    #
-    # hint2:
-    # to access and change i-th row of the matrix CurvePts, use:
-    # >> CurvePts[i,:]
-    #
+    print (samples)
+
+    # compute N curve points for t varying uniformly in [0.0,1.0]
     for i in range(0,N):
-    	CurvePts[i,:] = DeCasteljau(BezierPts,degree,0,samples[i])
-    # plt.plot( BezierPts[:,0], BezierPts[:,1], 'bo-' )
-    #
-    # hint3:
-    # the actual point b_0^degree on the curve is computed by calling DeCasteljau
-    # with arguments k=degree, i=0.
-    #
+        points = np.copy(BezierPts)
+        if rec == True :
+            CurvePts[i] = DeCasteljauRecursive(points,degree,0,samples[i])
+        else :
+            CurvePts[i] = DeCasteljauIterative(points,degree,0,samples[i])
     
     return CurvePts
 
-def Polygons(BezierPts) :
+#-------------------------------------------------
+# POLYGONPRINTER( ... )
+# Compute intermediate polygons and
+# plot the corresponding segments
+# b_i^k for k=1,...,degree-1 and i=0,...,degree-k
+#
+# Input
+#    BezierPts :  (degree+1) x 2 matrix of Bezier control points
+#
+def PolygonPrinter( BezierPts ) :
+    # get number of segments
     N = BezierPts.shape[0]-1
-    # samples = np.linspace(0.0,1.0,num=N)
+
+    # fix the value of t
     t = 0.5
+
+    # copy the original array with Bezier points
     points = np.copy(BezierPts)
 
     for depth in range(0,N):
-        plt.plot(points[:,0], points[:,1], 'bo-', linewidth=(depth % 2.0)+0.1)
-
+        
+        # compute points of the next polygon
         for column in range(0,N-depth):
             points[column] = (1-t)*points[column] + t*points[column+1]
+
+        # omit the last point since it's no longer useful
         points = points[:-1]
-        # plt.plot( points[:,0], points[:,1], 'bo-' )
-    plt.plot(points[:,0], points[:,1], 'bo-', linewidth=(depth % 2.0)+0.2)
+        
+        # print all intermediate polygons
+        plt.plot(points[:,0], points[:,1], '-o', 
+            linewidth=1.2 if depth%2.0==0 else 0.6)
+
 #-------------------------------------------------
 if __name__ == "__main__":
     
@@ -133,13 +149,19 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 :
         dataname = sys.argv[1]
     else :
-        dataname = "infinity" # simple, infinity, spiral, tuple
+        dataname = "spiral" # simple, infinity, spiral, tuple
 
     # arg 2 : sampling density
     if len(sys.argv) > 2 :
         density = int(sys.argv[2])
     else :
         density = 50
+
+    # arg 3 : recursive or iterative DeCasteljau
+    if len(sys.argv) > 3 :
+        rec = (True if sys.argv[3]=="rec" else False)
+    else :
+        rec = True
 
     # filename
     filename = DATADIR + dataname + ".bcv"
@@ -149,8 +171,7 @@ if __name__ == "__main__":
         print ("error:  invalid dataname '" + dataname + "'")
         print ("usage:  python tp1.py  [simple,infinity,spiral,tuple]  [sampling_density]")
         
-    else :    
-
+    else :
 
         # plot
         fig = plt.gcf()
@@ -166,33 +187,17 @@ if __name__ == "__main__":
         # compute curve points
         CurvePts = BezierCurve(BezierPts,density)
 
-        # plot the control polygon
-        # plt.plot( BezierPts[:,0], BezierPts[:,1], 'bo-' )
-        
+        # print the control polygon
+        plt.plot(BezierPts[:,0], BezierPts[:,1], '-o', linewidth=1.5)
+
         # plot the curve
         plt.plot( CurvePts[:,0], CurvePts[:,1], 'r-' )
         
-        #########
-        ## TODO : Uncomment if you want to save the render as png image in the data/ dir
-        #########
+        # save the render as png image in the data/ dir
         #plt.savefig( DATADIR + dataname + ".png" )
         
-        #########
-        ## TODO : Compute intermediate polygons b_i^k for k=1,...,degree-1 and i=0,...,degree-k
-        Polygons(BezierPts)
-        # samples = np.linspace(0.0,1.0,num=density)
-        # for i in range(0,density):
-        #     points = np.copy(BezierPts)
-        #     points[i,:] = DeCasteljau(points,points.shape[0]-1,0,samples[i])
-        # plt.plot( BezierPts[:,0], BezierPts[:,1], 'bo-' )
-        # for inter in range(1,density-1):
-        # 	points = np.copy(BezierPts)
-	       # 	DeCasteljau(points)
-	       #  plt.plot( points[:,0], points[:,1], 'bo-' )
-        #########
-        
-        #########
-        ## TODO : Add plt.plot commands to plot the intermediate polygons
-        #########
-        
+        # compute and plot intermediate polygons 
+        # b_i^k for k=1,...,degree-1 and i=0,...,degree-k
+        PolygonPrinter(BezierPts)
+
         plt.show()

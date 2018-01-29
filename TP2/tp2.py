@@ -110,7 +110,15 @@ def ComputeSplineC1( DataPts ) :
     ##
     ## TODO : Compute BezierPts.
     ##
-         
+    # print(DataPts)
+    for i in range(0,n+1) :
+        BezierPts[2*i] = DataPts[i]
+    # print(BezierPts)
+    BezierPts[1] = 0.5*(BezierPts[0]+BezierPts[2])
+    # print(BezierPts)
+    for i in range(1,n+1,2) :
+        BezierPts[i+2] = 2*BezierPts[i+1]-BezierPts[i]
+    # print(BezierPts)
     return BezierPts
 
 
@@ -171,7 +179,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 :
         dataname = sys.argv[1]
     else :
-        dataname = "simple" # simple, infinity, spiral
+        dataname = "spiral" # simple, infinity, spiral
 
     # arg 2 : sampling density
     if len(sys.argv) > 2 :
@@ -209,7 +217,7 @@ if __name__ == "__main__":
             deg=2
 
         # for each segment : compute and plot
-        for i in range(0,n) :
+        for i in range(0,n+2,2) :
             
             ##
             ## TODO : Put the control points of i-th spline segment into iBezierPts.
@@ -218,10 +226,14 @@ if __name__ == "__main__":
             ##
             ##        When it's done, uncomment the following code to compute and plot the segment.
             ##
-            
-            pass
-            #CurvePts = BezierCurve( iBezierPts, density )
-            #plt.plot( CurvePts[:,0], CurvePts[:,1], '-', linewidth=3 )
+
+            # prepare each segment
+            iBezierPts = np.zeros([deg+1,2])
+            for k in range(0,deg+1) :
+                iBezierPts[k] = BezierPts[i+k]
+
+            CurvePts = BezierCurve( iBezierPts, density )
+            plt.plot( CurvePts[:,0], CurvePts[:,1], '-', linewidth=3 )
 
 
         # plot the datapoints
