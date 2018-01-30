@@ -25,12 +25,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 
-if sys.platform.startswith('win'):
-    TP = os.path.dirname(os.path.realpath(__file__)) + "\\"
-    DATADIR = filename = TP+"data\\"
-else:
-    TP = os.path.dirname(os.path.realpath(__file__)) + "/"
-    DATADIR = filename = TP+"data/"
+TP = os.path.dirname(os.path.realpath(__file__)) + "/"
+DATADIR = filename = TP+"data/"
+
 #-------------------------------------------------
 # READPOLYGON()
 # Read Bezier control points from a file.
@@ -98,7 +95,7 @@ def BezierCurve( BezierPts, N ) :
 
     # generate the uniform sampling of the interval [0.0,1.0] with N elements
     samples = np.linspace(0.0,1.0,num=N)
-    print (samples)
+    # print (samples)
 
     # compute N curve points for t varying uniformly in [0.0,1.0]
     for i in range(0,N):
@@ -149,7 +146,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 :
         dataname = sys.argv[1]
     else :
-        dataname = "spiral" # simple, infinity, spiral, tuple
+        dataname = "infinity" # simple, infinity, spiral, tuple
 
     # arg 2 : sampling density
     if len(sys.argv) > 2 :
