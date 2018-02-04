@@ -214,6 +214,11 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 :
         dataname = sys.argv[1]
     else :
+        # spiral example can't work properly with C1,
+        # due to the fact that the last segments are too small
+        # and the intermidiate points of the last polygons
+        # are too distorted to be C1-smooth, so the curve 
+        # changes direction at the end
         dataname = "infinity" # simple, infinity, spiral, semi, tuple
 
     # arg 2 : sampling density
@@ -227,7 +232,10 @@ if __name__ == "__main__":
         c2 = True
     else :
         c2 = False
+    
+    # uncomment this for manual C2 mode activation
     # c2 = True
+    
     # filename
     filename = DATADIR + dataname + ".bcv"
     

@@ -83,8 +83,11 @@ def ReadBSpline( filename, nurbs=False ) :
 #
 def DeBoor( ControlPts, Knots, r, j, t ) :
     
-    pass
-    
+    if () :
+	    Knots[j] = (t - Knots[j])/(Knots[j+k-(r-1)] - Knots[j])
+	    ControlPts[j] = (1-(Knots[j]))*DeBoor[j-1] + Knots[j]*DeBoor[j]
+    else :
+    	
     ##
     ## TODO : Implement the De Boor algorithm.
     ##
