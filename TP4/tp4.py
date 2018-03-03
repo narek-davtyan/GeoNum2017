@@ -66,11 +66,12 @@ def Chaikin( X0 ) :
     
     # upsample
     X1 = np.zeros([2*n,2])
-
-    ##
-    ## TODO Implement Chaikin's subdivision scheme.
-    ##
-        
+    k=0
+    for i in range(0,n) :
+        X1[k,:] = 3.0/4.0*X0[(i%n),:] + 1.0/4.0*X0[((i+1)%n),:]
+        k+=1
+        X1[k,:] = 1.0/4.0*X0[(i%n),:] + 3.0/4.0*X0[((i+1)%n),:]
+        k+=1
     return X1
 
 
@@ -93,10 +94,12 @@ def CornerCutting( X0, a, b ) :
     
     # upsample
     X1 = np.zeros([2*n,2])        
-
-    ##
-    ## TODO Implement Corner cutting scheme.
-    ##
+    k=0
+    for i in range(0,n) :
+        X1[k,:] = (1-a)*X0[(i%n),:] + a*X0[((i+1)%n),:]
+        k+=1
+        X1[k,:] = (1-b)*X0[(i%n),:] + b*X0[((i+1)%n),:]
+        k+=1
     
     return X1
 
@@ -120,11 +123,13 @@ def FourPoint( X0, w ) :
     
     # upsample
     X1 = np.zeros([2*n,2])
-
-    ##
-    ## TODO Implement Four-point scheme.
-    ##
-    
+    k=0
+    for i in range(0,n) :
+        X1[k,:] = X0[(i%n),:]
+        k+=1
+        X1[k,:] = -w*X0[((i-1)%n),:] + (1.0/2.0+w)*X0[(i%n),:] + \
+                    (1.0/2.0+w)*X0[((i+1)%n),:] - w*X0[((i+2)%n),:]
+        k+=1    
     return X1
 
 
@@ -179,14 +184,17 @@ if __name__ == "__main__":
         
     else :
 
-        ##
-        ## TODO Experiment with various parameters.
-        ##
+        ## (a,b) = (0.1,0.6) (b = a + 1/2)
+        ## we obtain a C1 curve
+        ## (a,b) = (0.1,0.5) (b != a + 1/2)
+        ## we obtain a C0 curve 
         ## -- Corner cutting
-        a = 0.2
-        b = 0.8
+        a = 0.1
+        b = 0.5
         ## -- Generalized four-point
-        w = 0.05
+        ## W = (sqrt(5)-1)/8  => we obtain a fractal curve
+        ## W(k) = W/k for k = 1...infinity => the curve converges to the polygon 
+        w = (np.sqrt(5)+1)/8.0 + (np.sqrt(5)-1)/16.0
         
         # read datapoints
         DataPts = ReadDatapoints(filename)    
@@ -199,8 +207,9 @@ if __name__ == "__main__":
             
             # Chaikin
             if scheme == "CH" :
+                print(SubPts)
                 SubPts = Chaikin(SubPts)
-                
+                print(SubPts)
             # Corner cutting
             elif scheme == "CC" :
                 SubPts = CornerCutting(SubPts,a,b)
@@ -231,4 +240,5 @@ if __name__ == "__main__":
         #plt.savefig( DATADIR + dataname + ".png" )
         
         # render
-        plt.show()        
+        plt.show()
+        

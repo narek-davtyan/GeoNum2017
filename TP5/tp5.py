@@ -67,19 +67,57 @@ def ReadDatapoints( filename ) :
 #
 #
 def LaneRiesenfeld(X0,degree) :
-    
+
     # number of points
     n = X0.shape[0]
     
     # upsample
     X1 = np.zeros([2*n,2])
+    k=0
+
+    # refining
+    for i in range(0,n) :
+        X1[k,:] = X0[i,:]
+        k+=1
+        X1[k,:] = X0[i,:]
+        k+=1
+    
+    # smoothing
+    for d in range(0,degree) :
+        tmp = np.zeros([2*n,2])
+        for i in range(0,k) :
+            tmp[i,:] = 0.5*(X1[(i%k),:] + X1[((i+1)%k),:])
         
-    ##
-    ## TODO Implement the Lane-Riesenfeld algorithm.
-    ##
+        # replacement
+        X1 = tmp
 
     return X1
 
+#-------------------------------------------------
+# LANERIESENFELD2()
+# Perform one iteration of the Lane-Riesenfeld algorithm for degree2.
+#
+# Input
+#    X0       :  n x 2 matrix, initial polygon
+#
+# Output
+#    X1       :  2n x 2 matrix, subdivided polygon
+#
+def LaneRiesenfeld2(X0) :
+
+    # number of points
+    n = X0.shape[0]
+    
+    # upsample + refining
+    X1 = np.zeros([2*n,2])
+    k=0
+    for i in range(0,n) :
+        X1[k,:] = 3.0/4.0*X0[(i%n),:] + 1.0/4.0*X0[((i+1)%n),:]
+        k+=1
+        X1[k,:] = 1.0/4.0*X0[(i%n),:] + 3.0/4.0*X0[((i+1)%n),:]
+        k+=1
+
+    return X1
 
 #-------------------------------------------------
 # FOURPOINT()
@@ -101,17 +139,32 @@ def LaneRiesenfeld(X0,degree) :
 #
 #
 def FourPoint(X0,degree) :
-    
+
     # number of points
     n = X0.shape[0]
-    
+    #print("degree p = "+str(n))
     # upsample
     X1 = np.zeros([2*n,2])
+    k=0
+
+    # refining
+    for i in range(0,n) :
+        X1[k,:] = X0[i,:]
+        k+=1
+        X1[k,:] = 1.0/16.0*(-X0[(i-1)%n,:] + 9*X0[(i%n),:] \
+            + 9*X0[((i+1)%n),:] - X0[((i+2)%n),:])
+        k+=1
     
-    ##
-    ## TODO Implement the 4-point LR scheme.
-    ##
+    # smoothing
+    for d in range(0,degree) :
+        tmp = np.zeros([2*n,2])
+        for i in range(0,k) :
+            tmp[i,:] = 1.0/16.0*(-X1[(i-1)%k,:] + 9*X1[i,:] \
+                + 9*X1[((i+1)%k),:] - X1[((i+2)%k),:])
     
+        # replacement
+        X1 = tmp
+
     return X1
 
 
@@ -141,11 +194,26 @@ def SixPoint(X0,degree) :
     
     # upsample
     X1 = np.zeros([2*n,2])
+    k=0
+
+    # refining
+    for i in range(0,n) :
+        X1[k,:] = X0[i,:]
+        k+=1
+        X1[k,:] = 1.0/256.0*(3*X0[(i-2)%n,:] -25*X0[(i-1)%n,:] + 150*X0[(i%n),:] \
+            + 150*X0[((i+1)%n),:] - 25*X0[((i+2)%n),:] + 3*X0[((i+3)%n),:])
+        k+=1
     
-    ##
-    ## TODO Implement the 6-point LR scheme.
-    ##
+    # smoothing
+    for d in range(0,degree) :
+        tmp = np.zeros([2*n,2])
+        for i in range(0,k) :
+            tmp[i,:] = 1.0/256.0*(3*X1[(i-2)%k,:] -25*X1[(i-1)%k,:] + 150*X1[(i%k),:] \
+                + 150*X1[((i+1)%k),:] - 25*X1[((i+2)%k),:] + 3*X1[((i+3)%k),:])    
     
+        # replacement
+        X1 = tmp
+
     return X1
 
 
@@ -157,7 +225,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 :
         dataname = sys.argv[1]
     else :
-        dataname = "hepta"
+        dataname = "hepta" #bone,infinity,sumsign
         
     #---------------------------------------------    
     # arg 2 : scheme name
@@ -169,13 +237,15 @@ if __name__ == "__main__":
     # check
     if scheme == "LR" :
         schemeName = "Lane-Riesenfeld"
+    elif scheme == "LR2" :
+        schemeName = "Lane-Riesenfeld2"
     elif scheme == "FP" :
         schemeName = "4-point"
     elif scheme == "SP" :
         schemeName = "6-point"
     else :            
         print " error :  invalid scheme "+scheme
-        print "          should be LR or FP or SP"
+        print "          should be LR or LR2 or FP or SP"
         sys.exit(0)
         
     #---------------------------------------------
@@ -183,7 +253,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 3 :
         degree = int(sys.argv[3])
     else :
-        degree = 3
+        degree = 2
         
     #---------------------------------------------
     # arg 4 : number of subdivisions
@@ -207,14 +277,18 @@ if __name__ == "__main__":
         
         # init subdivided polygon
         X = P
-        
+        #print(X.shape[0])
         # iterative subdivision
         for i in range(subdivisions) :
             
             # Lane-Riesenfeld
             if scheme == "LR" :
                 X = LaneRiesenfeld(X,degree)
-                
+
+            # Lane-Riesenfeld 2
+            if scheme == "LR2" :
+                X = LaneRiesenfeld2(X)
+
             # 4-point
             elif scheme == "FP" :
                 X = FourPoint(X,degree)
@@ -223,6 +297,7 @@ if __name__ == "__main__":
             else :
                 X = SixPoint(X,degree)
         
+        print(X)
         # set axes with equal proportions
         plt.axis('equal')
         
@@ -252,3 +327,21 @@ if __name__ == "__main__":
         
         # render
         plt.show()        
+        ## 2. When varying the degree with the three subdivision schemes:
+        ##    LR: we observe that the more we increase the degree the more
+        ##        the curve gets further from the control polygon, the result curve is Ck-1
+        ##    FP: we observe no changes with the different datasets if we only slightly
+        ##        change the degree, to observe the important change of the curve
+        ##        on has to heavily change the degree parameter (e.g. with infinity - 30),
+        ##        the result curve is C1
+        ##    SP: we observe no changes with the different datasets if we only slightly
+        ##        change the degree, to observe the important change of the curve
+        ##        on has to even more heavily change the degree parameter, than with
+        ##        the FP scheme (e.g. with infinity - 60),
+        ##        the result curve is C2
+        ## 3. The six-point scheme gives the best result in terms of smoothness
+        ##    right away, that is with small degree (C2 curve), while the LR algorithm 
+        ##    can get to the more substantial curve much faster (one can see the important 
+        ##    change every time the degree parameter changes by one), the FP scheme
+        ##    is in the middle, although its properties are much closer to the SP scheme.
+        
