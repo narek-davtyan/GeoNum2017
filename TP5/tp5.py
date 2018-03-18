@@ -95,7 +95,8 @@ def LaneRiesenfeld(X0,degree) :
 
 #-------------------------------------------------
 # LANERIESENFELD2()
-# Perform one iteration of the Lane-Riesenfeld algorithm for degree2.
+# Perform one iteration of the Lane-Riesenfeld algorithm for degree 2.
+# That is exactly the Chaikin scheme.
 #
 # Input
 #    X0       :  n x 2 matrix, initial polygon
@@ -277,7 +278,7 @@ if __name__ == "__main__":
         
         # init subdivided polygon
         X = P
-        #print(X.shape[0])
+
         # iterative subdivision
         for i in range(subdivisions) :
             
@@ -286,7 +287,7 @@ if __name__ == "__main__":
                 X = LaneRiesenfeld(X,degree)
 
             # Lane-Riesenfeld 2
-            if scheme == "LR2" :
+            elif scheme == "LR2" :
                 X = LaneRiesenfeld2(X)
 
             # 4-point
@@ -297,7 +298,6 @@ if __name__ == "__main__":
             else :
                 X = SixPoint(X,degree)
         
-        print(X)
         # set axes with equal proportions
         plt.axis('equal')
         
