@@ -84,33 +84,56 @@ def Subdivide( M0, u_closed, v_closed ) :
     #  Implement one subdivision step for uniform B-splines.
     #  Store the result in array M1.
     #
+
     # upsample
-    M1 = np.zeros([dim,2*m,2*n])
+    M1 = np.zeros([2*m,2*n])
     ki = 0
     kj = 0
+    
     # refining
     for i in range(0,m) :
         for j in range(0,n) :
-            M1[:,ki,kj] = M0[:,i,j]
-            ki+=1
-            kj+=1
-            M1[:,ki,kj] = M0[:,i,j]
-            ki+=1
-            kj+=1
-    # # number of points
-    # n = X0.shape[0]
+            M1[ki,kj] = M0[0,i,j]
+            M1[ki+1,kj] = M0[0,i,j]
+            
+            M1[ki,kj+1] = M0[0,i,j]
+            M1[ki+1,kj+1] = M0[0,i,j]
+        kj+=2
+        ki+=2
+    print(M0)
+    print(M1)
     
     # # upsample
-    # X1 = np.zeros([2*n,2])
-    # k=0
-
-    # # refining
-    # for i in range(0,n) :
-    #     X1[k,:] = X0[i,:]
-    #     k+=1
-    #     X1[k,:] = X0[i,:]
-    #     k+=1
+    # M1 = np.zeros([dim,2*m,2*n])
+    # ki = 0
+    # kj = 0
     
+    # # refining
+    # for i in range(0,m) :
+    #     for j in range(0,n) :
+    #         M1[:,ki,kj] = M0[:,i,j]
+    #         M1[:,ki+1,kj] = M0[:,i,j]
+    #         M1[:,ki,kj+1] = M0[:,i,j]
+    #         M1[:,ki+1,kj+1] = M0[:,i,j]
+    #     kj+=2
+    #     ki+=2
+        
+    # print(M0)
+    # print(M1)
+    # # smoothing
+    # tmp = np.zeros([dim,2*m,2*n])
+    # # ki-=1
+    # # kj-=1
+    # for i in range(0,ki) :
+    #     for j in range(0,kj) :
+    #         tmp[:,i,j] = 0.5*(M1[:,(i%ki),(j%kj)]\
+    #          + M1[:,((i+1)%ki),(j%kj)])
+
+    #         # replacement
+    #         M1 = tmp
+
+
+
     # # smoothing
     # for d in range(0,degree) :
     #     tmp = np.zeros([2*n,2])
