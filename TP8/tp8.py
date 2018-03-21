@@ -84,7 +84,43 @@ def Subdivide( M0, u_closed, v_closed ) :
     #  Implement one subdivision step for uniform B-splines.
     #  Store the result in array M1.
     #
+    # upsample
+    M1 = np.zeros([dim,2*m,2*n])
+    ki = 0
+    kj = 0
+    # refining
+    for i in range(0,m) :
+        for j in range(0,n) :
+            M1[:,ki,kj] = M0[:,i,j]
+            ki+=1
+            kj+=1
+            M1[:,ki,kj] = M0[:,i,j]
+            ki+=1
+            kj+=1
+    # # number of points
+    # n = X0.shape[0]
     
+    # # upsample
+    # X1 = np.zeros([2*n,2])
+    # k=0
+
+    # # refining
+    # for i in range(0,n) :
+    #     X1[k,:] = X0[i,:]
+    #     k+=1
+    #     X1[k,:] = X0[i,:]
+    #     k+=1
+    
+    # # smoothing
+    # for d in range(0,degree) :
+    #     tmp = np.zeros([2*n,2])
+    #     for i in range(0,k) :
+    #         tmp[i,:] = 0.5*(X1[(i%k),:] + X1[((i+1)%k),:])
+        
+    #     # replacement
+    #     X1 = tmp
+
+    # return X1
     #
     # TODO
     # Change the following to 'return M1' when appropriate
