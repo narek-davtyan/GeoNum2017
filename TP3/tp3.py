@@ -61,6 +61,13 @@ def ReadBSpline( filename, nurbs=False ) :
     return ControlPts, Knots
 
 
+def ComputeW( Knots, i, k, t) :
+
+    if Knots[i] < Knots[i+k] :
+        return (t - Knots[i])/(Knots[i+k] - Knots[i])
+    else:
+        return 0
+
 #-------------------------------------------------
 # DEBOOR( ... )
 # Perform the De Boor's algorithm.
@@ -82,15 +89,14 @@ def ReadBSpline( filename, nurbs=False ) :
 #
 #
 def DeBoor( ControlPts, Knots, r, j, t ) :
-    
-    # if () :
-	   #  Knots[j] = (t - Knots[j])/(Knots[j+k-(r-1)] - Knots[j])
-	   #  ControlPts[j] = (1-(Knots[j]))*DeBoor[j-1] + Knots[j]*DeBoor[j]
-    # else :
-    	
-    ##
-    ## TODO : Implement the De Boor algorithm.
-    ##
+    k = Knots.shape[0] - ControlPts.shape[0] -1
+    if r==0 :
+        return ControlPts[j,:]
+    else :
+        return (1-ComputeW(Knots, j, k-r+1, t )) * \
+        DeBoor( ControlPts, Knots, r-1, j-1, t )  +  \
+        ComputeW(Knots, j, k-r+1, t ) * \
+        DeBoor( ControlPts, Knots, r-1, j, t )
 
     
 #-------------------------------------------------
@@ -164,21 +170,23 @@ if __name__ == "__main__":
         ##   Beware though : some of these segments can be degenerate! (if t_i == t_i+1)
         ##
         # loop over segments
+        if nurbs :
+            ControlPts[:,0] *= ControlPts[:,2]
+            ControlPts[:,1] *= ControlPts[:,2]
+        
         for j in range(degree,m-degree) :
-            
-            ##
-            ## TODO : Make sure the segment is non-degenerate.
-            ##
-        
-            # prepare matrix of segment points
-            Segment = np.zeros([density,dim])
-        
-            ##
-            ## TODO : Perform De Boor.
-            ##
-            
-            # plot the segment
-            plt.plot( Segment[:,0], Segment[:,1], '-',linewidth=3)
+            if Knots[j] != Knots[j+1]: 
+                # prepare matrix of segment points
+                Segment = np.zeros([density,dim])
+                x = 0
+                for t in np.linspace(Knots[j], Knots[j+1], num=density) :       
+                    Segment[x,:] = DeBoor( ControlPts, Knots, degree, j, t )
+                    x+=1
+                if nurbs :
+                    Segment[:,0] /= Segment[:,2]
+                    Segment[:,1] /= Segment[:,2]
+                # plot the segment
+                plt.plot( Segment[:,0], Segment[:,1], '-',linewidth=3)
         
         
         

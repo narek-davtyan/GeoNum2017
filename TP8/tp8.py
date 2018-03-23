@@ -80,11 +80,11 @@ def Subdivide( M0, u_closed, v_closed ) :
     dim, m, n = M0.shape
     
     # upsample
-    M1 = np.zeros([dim,2*m,2*n])
+    M1 = np.zeros([dim, \
+        2*m if u_closed else 2*(m-1), \
+        2*n if v_closed else 2*(n-1)])
     
-    # calculating subdivision masks
-    # for i in range(0,m) :
-    #     for j in range(0,n) :
+    # calculating and applying subdivision masks
     for i in range(0,m if u_closed else (m-1)) :
         for j in range(0,n if v_closed else (n-1)) :
             
@@ -99,10 +99,7 @@ def Subdivide( M0, u_closed, v_closed ) :
             M1[:,2*i+0,2*j+0] = (1.0/16.0)*(9.0*A +3.0*B +3.0*C +1.0*D)
             M1[:,2*i+1,2*j+0] = (1.0/16.0)*(3.0*A +9.0*B +1.0*C +3.0*D)
             M1[:,2*i+0,2*j+1] = (1.0/16.0)*(3.0*A +1.0*B +9.0*C +3.0*D)
-            M1[:,2*i+1,2*j+1] = (1.0/16.0)*(1.0*A +3.0*B +3.0*C +9.0*D)
-    
-    print(M0)
-    print(M1)    
+            M1[:,2*i+1,2*j+1] = (1.0/16.0)*(1.0*A +3.0*B +3.0*C +9.0*D)    
 
     return M1
     
@@ -113,6 +110,8 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 :
         dataname = sys.argv[1]
         if dataname == "terrain" :
+            # First parameter modifies the length/width
+            # Second parameter modifies the height
             GenerateRandomTerrain(59,1.0)
             #GenerateRandomTerrain(20,3.0)
     else :
