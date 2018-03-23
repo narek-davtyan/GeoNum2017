@@ -79,75 +79,32 @@ def Subdivide( M0, u_closed, v_closed ) :
     # dim is equal to 3
     dim, m, n = M0.shape
     
-    #
-    # TODO
-    #  Implement one subdivision step for uniform B-splines.
-    #  Store the result in array M1.
-    #
-
     # upsample
-    M1 = np.zeros([2*m,2*n])
-    ki = 0
-    kj = 0
+    M1 = np.zeros([dim,2*m,2*n])
     
-    # refining
-    for i in range(0,m) :
-        for j in range(0,n) :
-            M1[ki,kj] = M0[0,i,j]
-            M1[ki+1,kj] = M0[0,i,j]
-            
-            M1[ki,kj+1] = M0[0,i,j]
-            M1[ki+1,kj+1] = M0[0,i,j]
-        kj+=2
-        ki+=2
-    print(M0)
-    print(M1)
-    
-    # # upsample
-    # M1 = np.zeros([dim,2*m,2*n])
-    # ki = 0
-    # kj = 0
-    
-    # # refining
+    # calculating subdivision masks
     # for i in range(0,m) :
     #     for j in range(0,n) :
-    #         M1[:,ki,kj] = M0[:,i,j]
-    #         M1[:,ki+1,kj] = M0[:,i,j]
-    #         M1[:,ki,kj+1] = M0[:,i,j]
-    #         M1[:,ki+1,kj+1] = M0[:,i,j]
-    #     kj+=2
-    #     ki+=2
-        
-    # print(M0)
-    # print(M1)
-    # # smoothing
-    # tmp = np.zeros([dim,2*m,2*n])
-    # # ki-=1
-    # # kj-=1
-    # for i in range(0,ki) :
-    #     for j in range(0,kj) :
-    #         tmp[:,i,j] = 0.5*(M1[:,(i%ki),(j%kj)]\
-    #          + M1[:,((i+1)%ki),(j%kj)])
+    for i in range(0,m if u_closed else (m-1)) :
+        for j in range(0,n if v_closed else (n-1)) :
+            
+            i_plus_one = (i+1)%m if u_closed else (i+1)
+            j_plus_one = (j+1)%n if v_closed else (j+1)
+            
+            A = M0[:,i,j]
+            B = M0[:,i_plus_one,j]
+            C = M0[:,i,j_plus_one]
+            D = M0[:,i_plus_one,j_plus_one]
 
-    #         # replacement
-    #         M1 = tmp
+            M1[:,2*i+0,2*j+0] = (1.0/16.0)*(9.0*A +3.0*B +3.0*C +1.0*D)
+            M1[:,2*i+1,2*j+0] = (1.0/16.0)*(3.0*A +9.0*B +1.0*C +3.0*D)
+            M1[:,2*i+0,2*j+1] = (1.0/16.0)*(3.0*A +1.0*B +9.0*C +3.0*D)
+            M1[:,2*i+1,2*j+1] = (1.0/16.0)*(1.0*A +3.0*B +3.0*C +9.0*D)
+    
+    print(M0)
+    print(M1)    
 
-
-
-    # # smoothing
-    # for d in range(0,degree) :
-    #     tmp = np.zeros([2*n,2])
-    #     for i in range(0,k) :
-    #         tmp[i,:] = 0.5*(X1[(i%k),:] + X1[((i+1)%k),:])
-        
-    #     # replacement
-    #     X1 = tmp
-
-    # return X1
-    #
-    # TODO
-    # Change the following to 'return M1' when appropriate
-    return M0
+    return M1
     
 #-------------------------------------------------
 if __name__ == "__main__":
@@ -156,12 +113,15 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 :
         dataname = sys.argv[1]
         if dataname == "terrain" :
-            GenerateRandomTerrain(20,3.0)
+            GenerateRandomTerrain(59,1.0)
+            #GenerateRandomTerrain(20,3.0)
     else :
+        # torus,cylinder,grid,terrain
         dataname = "torus"
 
     # arg 2 : subdivision depth
     if len(sys.argv) > 2 :
+        # subdivision_depth=1
         depth = int(sys.argv[2])
     else :
         depth = 1
