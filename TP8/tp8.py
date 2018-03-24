@@ -101,6 +101,7 @@ def Subdivide( M0, u_closed, v_closed ) :
             M1[:,2*i+0,2*j+1] = (1.0/16.0)*(3.0*A +1.0*B +9.0*C +3.0*D)
             M1[:,2*i+1,2*j+1] = (1.0/16.0)*(1.0*A +3.0*B +3.0*C +9.0*D)    
 
+    print(M1)
     return M1
 
 def Sub_C_C( M0, u_closed, v_closed ) :
@@ -108,12 +109,15 @@ def Sub_C_C( M0, u_closed, v_closed ) :
     # dim is equal to 3
     dim, m, n = M0.shape
 
+    print(str(u_closed)+" m="+str(m)+" n="+str(n))
     # generate face points
-    M1 = np.zeros([dim, \
-        m if u_closed else (m-1), \
-        n if v_closed else (n-1)])
-    for i in range(0,m if u_closed else (m-1)) :
-        for j in range(0,n if v_closed else (n-1)) :
+    M1 = np.zeros([dim,m-1,n-1])
+
+
+    # print("M0="+str(M0.shape)+"M1="+str(M1.shape))
+    # print(M0)
+    for i in range(0,m-1) :
+        for j in range(0,n-1) :
 
             i_plus_one = (i+1)%m if u_closed else (i+1)
             j_plus_one = (j+1)%n if v_closed else (j+1)
@@ -122,18 +126,26 @@ def Sub_C_C( M0, u_closed, v_closed ) :
             B = M0[:,i_plus_one,j]
             C = M0[:,i,j_plus_one]
             D = M0[:,i_plus_one,j_plus_one]
-
-            M1[:,i+0,j+0] = (1.0/4.0)*(A + B + C + D)
+            # print("Num("+str(i)+","+str(j)+")="+str((1.0/4.0)*(A + B + C + D)))
+            M1[:,i,j] = (1.0/4.0)*(A + B + C + D)
     # print(M0)
-    #print(M1)
+    # print(M1)
 
     # generate edge points
-    M2 = np.zeros([dim, \
-        m/2+m%2+n/2+n%2 if u_closed else (m/2+m%2), \
-        n/2+n%2+m/2+m%2 if v_closed else (n/2+n%2)])
+    M2 = np.zeros([dim,\
+        n/2+n%2+1 if u_closed else n/2+n%2,\
+        m/2+m%2+1 if v_closed else m/2+m%2])
+    # print(M0.shape)
+    # print(M2.shape)
+    
+    M0t = M0.transpose(0,2,1)
+    
+    M3t = np.zeros([dim,\
+        n/2+n%2+1 if u_closed else n/2+n%2,\
+        m/2+m%2+1 if v_closed else m/2+m%2])
    
-    for i in range(0,m if u_closed else (m-1)) :
-        for j in range(0,n if v_closed else (n-2)) :
+    for i in range(0,m-1) :
+        for j in range(0,n-2) :
             
             i_plus_one = (i+1)%m if u_closed else (i+1)
             j_plus_one = (j+1)%n if v_closed else (j+1)
@@ -146,70 +158,40 @@ def Sub_C_C( M0, u_closed, v_closed ) :
             E = M0[:,i,j_plus_two]
             F = M0[:,i_plus_one,j_plus_two]
             
+            # print(str((1.0/4.0)*(A + B + 6.0*C + 6.0*D + E + F)))
             M2[:,i,j] = (1.0/4.0)*(A + B + 6.0*C + 6.0*D + E + F)
 
-    M0p = M0.transpose(0,2,1)
+            At = M0t[:,i,j]
+            Bt = M0t[:,i_plus_one,j]
+            Ct = M0t[:,i,j_plus_one]
+            Dt = M0t[:,i_plus_one,j_plus_one]
+            Et = M0t[:,i,j_plus_two]
+            Ft = M0t[:,i_plus_one,j_plus_two]
 
-    # generate edge points
-    M3 = np.zeros([dim, \
-        m/2+m%2+n/2+n%2 if u_closed else (m/2+m%2), \
-        n/2+n%2+m/2+m%2 if v_closed else (n/2+n%2)])
-    print(M0p)
-    for i in range(0,m if u_closed else (m-1)) :
-        for j in range(0,n if v_closed else (n-2)) :
-            
-            i_plus_one = (i+1)%m if u_closed else (i+1)
-            j_plus_one = (j+1)%n if v_closed else (j+1)
-            j_plus_two = (j+2)%n if v_closed else (j+2)
-            
-            A = M0p[:,i,j]
-            B = M0p[:,i_plus_one,j]
-            C = M0p[:,i,j_plus_one]
-            D = M0p[:,i_plus_one,j_plus_one]
-            E = M0p[:,i,j_plus_two]
-            F = M0p[:,i_plus_one,j_plus_two]
-            
-            M3[:,i,j] = (1.0/4.0)*(A + B + 6.0*C + 6.0*D + E + F)
+            M3t[:,i,j] = (1.0/4.0)*(At + Bt + 6.0*Ct + 6.0*Dt + Et + Ft)
 
+    print(M2)
+    
 
+    M3 = M3t.transpose(0,2,1)
 
-
-    # M3 = np.zeros([dim, \
-    #     m/2+m%2+n/2+n%2 if u_closed else (m/2+m%2), \
-    #     n/2+n%2+m/2+m%2 if v_closed else (n/2+n%2)])
-    # print("M3.shape="+str(M3.shape))
-    # for j in range(0,m if u_closed else (m-2)) :
-    #     for i in range(0,n if v_closed else (n-1)) :
-            
-    #         i_plus_one = (i+1)%m if u_closed else (i+1)
-    #         j_plus_one = (j+1)%n if v_closed else (j+1)
-    #         i_plus_two = (i+2)%m if u_closed else (i+2)
-    #         print ("Iteration of m="+str(m)+" n="+str(n)+\
-    #             " i="+ str(i)+" j="+str(j)+" u_c="+str(u_closed)+" v_c="+str(v_closed))
-    #         A = M0[:,i,j]
-    #         B = M0[:,i_plus_one,j]
-    #         C = M0[:,i,j_plus_one]
-    #         D = M0[:,i_plus_one,j_plus_one]
-    #         G = M0[:,i_plus_two,j]
-    #         H = M0[:,i_plus_two,j_plus_one]
-    #         print("Num="+str((1.0/4.0)*(A + 6.0*B + C + 6.0*D + G + H)))
-    #         M3[:,j,i] = (1.0/4.0)*(A + 6.0*B + C + 6.0*D + G + H)
-    #         print("M3[:,j="+str(j)+",i="+str(i)+"]" + str(M3[:,j,i]))
-    #         print("")
-
-    # print(M2)
     print(M3)
 
+    print("M0="+str(M0.shape)+"M1="+str(M1.shape)+\
+        " M2="+str(M2.shape)+" M3="+str(M3.shape)+"\n")
+    
+    
+
     # modify the existing vertices
-    # (Q/n) + (2R/n) + (S(n-3)/n) , where valence n=4, hence (Q/4) + (R/2) + (S/4),
-    # with Q - the average of the surrounding face points, 
+    # (Q/n) + (2R/n) + (S(n-3)/n) , where valence n=4, 
+    # hence (Q/4) + (R/2) + (S/4), with
+    # Q - the average of the surrounding face points, 
     # R - the average of all surround edge midpoints, and 
     # S - the control point
-    M4 = np.zeros([dim, \
-        n if v_closed else (n-1), \
-        m if u_closed else (m-1)])
-    for i in range(0,m-1 if u_closed else (m-2)) :
-        for j in range(0,n-1 if v_closed else (n-2)) :
+    M4 = np.zeros([dim,m/2+m%2,n/2+n%2])
+
+    for i in range(0,m/2+m%2) :
+        for j in range(0,n/2+n%2) :
             
             i_plus_one = (i+1)%m if u_closed else (i+1)
             j_plus_one = (j+1)%n if v_closed else (j+1)
@@ -219,19 +201,59 @@ def Sub_C_C( M0, u_closed, v_closed ) :
             C = M1[:,i,j_plus_one]
             D = M1[:,i_plus_one,j_plus_one]
             Q = (1.0/4.0)*(A + B + C + D)
-
-            i_plus_one = (i+1)%(m/2+m%2) if u_closed else (i+1)
-            j_plus_one = (j+1)%(n/2+n%2) if v_closed else (j+1)
+            # print("Q="+str(Q))
 
             E = M2[:,i,j]
             F = M2[:,i_plus_one,j]
             G = M3[:,i,j]
             H = M3[:,i,j_plus_one]
+            # print(" i="+str(i)+" j="+str(j)+" E="+str(E[1])+" F="+str(F[1])+" G="+str(G[1])+" H="+str(H[1]))
             R = (1.0/4.0)*(E + F + G + H)
+            # print("R="+str(R[1]))
+
             S = M0[:,i_plus_one,j_plus_one]
+            # print("S="+str(S))
+
 
             M4[:,i,j] = (1.0/4.0)*Q + (1.0/2.0)*R + (1.0/4.0)*S
+    print(M4)
+    return M4
+
+def Sub( M0, u_closed, v_closed ) :
+    # dim is equal to 3
+    dim, m, n = M0.shape
+    
+    # upsample
+    M1 = np.zeros([dim, \
+        m if u_closed else (m), \
+        n if v_closed else (n)])
+    
+    # calculating and applying subdivision masks
+    for i in range(0,m if u_closed else (m-2)) :
+        for j in range(0,n if v_closed else (n-2)) :
             
+            i_plus_one = (i+1)%m if u_closed else (i+1)
+            j_plus_one = (j+1)%n if v_closed else (j+1)
+            i_plus_two = (i+2)%m if u_closed else (i+2)
+            j_plus_two = (j+2)%n if v_closed else (j+2)
+            # i_plus_thr = (i+3)%m if u_closed else (i+3)
+            # j_plus_thr = (j+3)%n if v_closed else (j+3)
+            
+            A = M0[:,i_plus_one,j_plus_one]
+            B = M0[:,i_plus_one,j]
+            C = M0[:,i,j_plus_one]
+            D = M0[:,i_plus_two,j_plus_one]
+            E = M0[:,i_plus_one,j_plus_two]
+            F = M0[:,i,j]
+            G = M0[:,i,j_plus_two]
+            H = M0[:,i_plus_two,j]
+            I = M0[:,i_plus_two,j_plus_two]
+
+            M1[:,i,j] = (1.0/64.0)*(36.0*A +6.0*B +6.0*C +6.0*D\
+                +6.0*E +1.0*F +1.0*G +1.0*H +1.0*I)
+    print(M1)
+
+    return M1
 #-------------------------------------------------
 if __name__ == "__main__":
     
@@ -285,8 +307,8 @@ if __name__ == "__main__":
                 
         # iterative subdivision
         for d in range(depth) :
-            Sub_C_C(M,u_closed,v_closed)
-            M = Subdivide(M,u_closed,v_closed) if not algo_cc else Sub_C_C(M,u_closed,v_closed)
+            # M = Sub(M,u_closed,v_closed)
+            M = Subdivide(M,u_closed,v_closed)# if not algo_cc else Sub_C_C(M,u_closed,v_closed)
         
         # u_closed : make rows periodic
         if u_closed :
