@@ -124,22 +124,19 @@ def Sub_C_C( M0, u_closed, v_closed ) :
             D = M0[:,i_plus_one,j_plus_one]
 
             M1[:,i+0,j+0] = (1.0/4.0)*(A + B + C + D)
-    print(M0)
-    print(M1)
+    # print(M0)
+    #print(M1)
 
     # generate edge points
     M2 = np.zeros([dim, \
-        m/2+m%2 if u_closed else (m/2+m%2-1), \
-        n/2+n%2 if v_closed else (n/2+n%2-1)])
-    M3 = np.zeros([dim, \
-        n/2+m%2 if v_closed else (n/2+n%2-1), \
-        m/2+n%2 if u_closed else (m/2+m%2-1)])
-    for i in range(0,m-1 if u_closed else (m-2)) :
-        for j in range(0,n-1 if v_closed else (n-2)) :
+        m/2+m%2+n/2+n%2 if u_closed else (m/2+m%2), \
+        n/2+n%2+m/2+m%2 if v_closed else (n/2+n%2)])
+   
+    for i in range(0,m if u_closed else (m-1)) :
+        for j in range(0,n if v_closed else (n-2)) :
             
             i_plus_one = (i+1)%m if u_closed else (i+1)
             j_plus_one = (j+1)%n if v_closed else (j+1)
-            i_plus_two = (i+2)%m if u_closed else (i+2)
             j_plus_two = (j+2)%n if v_closed else (j+2)
             
             A = M0[:,i,j]
@@ -148,13 +145,59 @@ def Sub_C_C( M0, u_closed, v_closed ) :
             D = M0[:,i_plus_one,j_plus_one]
             E = M0[:,i,j_plus_two]
             F = M0[:,i_plus_one,j_plus_two]
-            G = M0[:,i_plus_two,j]
-            H = M0[:,i_plus_two,j_plus_one]
+            
+            M2[:,i,j] = (1.0/4.0)*(A + B + 6.0*C + 6.0*D + E + F)
 
-            M2[:,i/2+i%2,j/2+j%2] = (1.0/4.0)*(A + B + 6.0*C + 6.0*D + E + F)
-            M3[:,i/2+i%2,j/2+j%2] = (1.0/4.0)*(A + C + 6.0*B + 6.0*D + G + H)
+    M0p = M0.transpose(0,2,1)
 
-    print(M2)
+    # generate edge points
+    M3 = np.zeros([dim, \
+        m/2+m%2+n/2+n%2 if u_closed else (m/2+m%2), \
+        n/2+n%2+m/2+m%2 if v_closed else (n/2+n%2)])
+    print(M0p)
+    for i in range(0,m if u_closed else (m-1)) :
+        for j in range(0,n if v_closed else (n-2)) :
+            
+            i_plus_one = (i+1)%m if u_closed else (i+1)
+            j_plus_one = (j+1)%n if v_closed else (j+1)
+            j_plus_two = (j+2)%n if v_closed else (j+2)
+            
+            A = M0p[:,i,j]
+            B = M0p[:,i_plus_one,j]
+            C = M0p[:,i,j_plus_one]
+            D = M0p[:,i_plus_one,j_plus_one]
+            E = M0p[:,i,j_plus_two]
+            F = M0p[:,i_plus_one,j_plus_two]
+            
+            M3[:,i,j] = (1.0/4.0)*(A + B + 6.0*C + 6.0*D + E + F)
+
+
+
+
+    # M3 = np.zeros([dim, \
+    #     m/2+m%2+n/2+n%2 if u_closed else (m/2+m%2), \
+    #     n/2+n%2+m/2+m%2 if v_closed else (n/2+n%2)])
+    # print("M3.shape="+str(M3.shape))
+    # for j in range(0,m if u_closed else (m-2)) :
+    #     for i in range(0,n if v_closed else (n-1)) :
+            
+    #         i_plus_one = (i+1)%m if u_closed else (i+1)
+    #         j_plus_one = (j+1)%n if v_closed else (j+1)
+    #         i_plus_two = (i+2)%m if u_closed else (i+2)
+    #         print ("Iteration of m="+str(m)+" n="+str(n)+\
+    #             " i="+ str(i)+" j="+str(j)+" u_c="+str(u_closed)+" v_c="+str(v_closed))
+    #         A = M0[:,i,j]
+    #         B = M0[:,i_plus_one,j]
+    #         C = M0[:,i,j_plus_one]
+    #         D = M0[:,i_plus_one,j_plus_one]
+    #         G = M0[:,i_plus_two,j]
+    #         H = M0[:,i_plus_two,j_plus_one]
+    #         print("Num="+str((1.0/4.0)*(A + 6.0*B + C + 6.0*D + G + H)))
+    #         M3[:,j,i] = (1.0/4.0)*(A + 6.0*B + C + 6.0*D + G + H)
+    #         print("M3[:,j="+str(j)+",i="+str(i)+"]" + str(M3[:,j,i]))
+    #         print("")
+
+    # print(M2)
     print(M3)
 
     # modify the existing vertices
